@@ -3,49 +3,46 @@ import threading
 
 class FilaTarefas:
     tamanhoFila = 5
-    mutex  = threading.Semaphore(1)
-    empty  = threading.Semaphore(tamanhoFila)
-    full   = threading.Semaphore(0)
-    buffer = list(range(tamanhoFila))
-    cheio  = 0
-    livre  = 0
-
+    fila = list()
+    
     def __init__(self, size):
         self.tamanhoFila = size
 
-    def insert(self, item):
-        self.empty.acquire()
-        self.mutex.acquire()
-        self.buffer[self.livre] = item
-        self.livre = (self.livre + 1) % self.tamanhoFila
-        self.mutex.release()
-        self.full.release()
+    def inserir(self,tarefa):
+        if len(self.fila) < self.tamanhoFila:
+            self.fila.append(tarefa)
+    
+    def remover(self):
+        self.fila.pop(0)
 
-    def remove(self):
-        self.full.acquire()
-        self.mutex.acquire()
-        item = self.buffer[self.cheio]
-        self.cheio = (self.cheio + 1) % self.tamanhoFila
-        self.mutex.release()
-        self.empty.release()
-        return item
+filaTarefas = FilaTarefas(5)
 
-b = FilaTarefas()
+class Funcionario:
+    id = 0
+    tarefas = list()
 
-def produtor():
-   while True:
-      time.sleep(random.randint(1, 10) / 100.0)
-      item = time.ctime()
-      b.insert(item)
-      print("Produtor produziu:", item, b.livre, b.cheio)
+    def __init__(self, id):
+        self.id = id
+        f= open("func%i.txt" %(id),"r+")
+        lista = str.split(f.read()," ")
+        for tarefa in lista:
+            self.tarefas.append([id,tarefa])
 
-def consumidor():
-   while True:
-      time.sleep(random.randint(1, 10) / 100.0)
-      item = b.remove()
-      print("Consumidor consumiu:", item, b.livre, b.cheio)
+class Maquina:
+    id = 0
+    idFuncionario = 0
+    idTarefa = 0
+    tempoTarefa = 0
+    global filaTarefas
 
-threading._start_new_thread(produtor, ())
-threading._start_new_thread(consumidor, ())
+    def __init__(self,idM):
+        self.id = idM
 
-while 1: pass
+    def executarThread(self):
+        t = threading.Thread(target = self.executarProximaTarefa)
+        t.start()
+
+    def executarProximaTarefa(self):
+        tarefa = self.filaTarefas.fila[0]
+        time.sleep(tarefa[2])
+        print("Exec", self.id, tarefa[0])
