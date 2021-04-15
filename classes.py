@@ -7,7 +7,7 @@ class FilaTarefas:
     
     def __init__(self, size):
         self.tamanhoFila = size
-
+          
     def inserir(self,tarefa):
         if len(self.fila) < self.tamanhoFila:
             self.fila.append(tarefa)
@@ -19,15 +19,17 @@ filaTarefas = FilaTarefas(5)
 
 class Funcionario:
     id = 0
-    tarefas = list()
 
     def __init__(self, id):
         self.id = id
+        self.tarefas = []
         f= open("func%i.txt" %(id),"r+")
-        lista = str.split(f.read()," ")
+        lista = f.readlines()
+        f.close()
         for tarefa in lista:
-            self.tarefas.append([id,tarefa])
-
+            tarefa = tarefa.replace('\n', '')
+            self.tarefas.append([id] + tarefa.split(" "))
+                    
 class Maquina:
     id = 0
     idFuncionario = 0
@@ -39,10 +41,12 @@ class Maquina:
         self.id = idM
 
     def executarThread(self):
-        t = threading.Thread(target = self.executarProximaTarefa)
+        t = threading.Thread(target = self.executarTarefas)
         t.start()
 
-    def executarProximaTarefa(self):
-        tarefa = self.filaTarefas.fila[0]
-        time.sleep(tarefa[2])
-        print("Exec", self.id, tarefa[0])
+    def executarTarefas(self):
+        while len(filaTarefas.fila) > 0:
+            tarefa = filaTarefas.fila[0]
+            filaTarefas.remover()
+            time.sleep(tarefa[2])
+            print("Exec", self.id, tarefa[0])
